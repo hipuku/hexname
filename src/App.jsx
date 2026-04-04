@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { nameColor, parseColor } from './colorMatcher'
 import './index.css'
 
@@ -485,9 +485,20 @@ const PALETTE = [
 function Colophon() {
   const footnote = { fontFamily: 'var(--font-sans)', fontSize: 11, lineHeight: 1.6, color: 'var(--ink-2)' }
   const dim      = { ...footnote, color: 'var(--ink-3)' }
+  const ref      = useRef(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const set = (h) => document.documentElement.style.setProperty('--footer-h', `${h}px`)
+    set(el.getBoundingClientRect().height)
+    const observer = new ResizeObserver(([entry]) => set(entry.contentRect.height))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <footer style={{ borderTop: '1px solid var(--ink-4)' }}>
+    <footer ref={ref} style={{ borderTop: '1px solid var(--ink-4)' }}>
       <div className="max-w-2xl mx-auto px-6 py-10 grid gap-8" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
 
         {/* How it works */}

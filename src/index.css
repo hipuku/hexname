@@ -200,7 +200,7 @@ body {
 /* ─── Toast ──────────────────────────────────────────────────────────────────── */
 .toast-stack {
   position: fixed;
-  bottom: 24px;
+  bottom: calc(var(--footer-h, 0px) + 16px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
