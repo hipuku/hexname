@@ -383,9 +383,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--surface-page)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--surface-page)' }}>
       <ToastStack toasts={toasts} />
-      <div className="max-w-2xl mx-auto px-6 py-16">
+      <div className="max-w-2xl mx-auto px-6 py-16 flex-1 w-full">
 
         {/* Header */}
         <div className="mb-10">
