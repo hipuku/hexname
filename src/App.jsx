@@ -465,6 +465,83 @@ export default function App() {
           </div>
         )}
       </div>
+
+      <Colophon />
     </div>
+  )
+}
+
+// ─── Colophon ─────────────────────────────────────────────────────────────────
+
+const PALETTE = [
+  { hex: '#F6F7ED', name: 'Praxeti White' },
+  { hex: '#DBE64C', name: 'First Colors of Spring' },
+  { hex: '#001F3F', name: 'Midnight Mirage' },
+  { hex: '#74C365', name: 'Mantis' },
+  { hex: '#00804C', name: 'Picture Book Green' },
+  { hex: '#1E488F', name: 'Nuit Blanche' },
+]
+
+function Colophon() {
+  return (
+    <footer style={{ borderTop: '1px solid var(--ink-4)' }}>
+      <div className="max-w-2xl mx-auto px-6 py-12 grid gap-8" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+
+        {/* How it works */}
+        <div className="flex flex-col gap-2">
+          <p className="t-label mb-1">How it works</p>
+          <p className="t-body" style={{ color: 'var(--ink-2)' }}>
+            Each color is matched against a dataset of 30,000+ named colors using Delta-E distance in the CIE Lab color space — the same model the human eye uses to judge similarity.
+          </p>
+          <p className="t-body mt-2" style={{ color: 'var(--ink-2)' }}>
+            Lab is perceptually uniform, so a distance of 5 always looks the same regardless of hue.
+          </p>
+        </div>
+
+        {/* Palette */}
+        <div className="flex flex-col gap-2">
+          <p className="t-label mb-1">Palette</p>
+          <div className="flex flex-col gap-2">
+            {PALETTE.map(({ hex, name }) => (
+              <div key={hex} className="flex items-center gap-2">
+                <div
+                  className="flex-shrink-0"
+                  style={{
+                    width: 14,
+                    height: 14,
+                    backgroundColor: hex,
+                    border: hex === '#F6F7ED' ? '1px solid var(--ink-4)' : 'none',
+                  }}
+                />
+                <span className="t-code-sm" style={{ color: 'var(--ink-2)' }}>{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Built with */}
+        <div className="flex flex-col gap-2">
+          <p className="t-label mb-1">Built with</p>
+          <div className="flex flex-col gap-1.5">
+            {[
+              ['Typefaces', 'Andika · Geist Mono'],
+              ['Framework', 'React 19 + Vite'],
+              ['Styles', 'Tailwind CSS v4'],
+              ['Color math', 'chroma-js'],
+              ['Dataset', 'meodai/color-names'],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <span className="t-code-sm" style={{ color: 'var(--ink-3)' }}>{label} </span>
+                <span className="t-code-sm" style={{ color: 'var(--ink-2)' }}>{value}</span>
+              </div>
+            ))}
+          </div>
+          <p className="t-code-sm mt-4" style={{ color: 'var(--ink-3)' }}>
+            hexname · {new Date().getFullYear()}
+          </p>
+        </div>
+
+      </div>
+    </footer>
   )
 }
