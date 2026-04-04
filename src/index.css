@@ -1,0 +1,241 @@
+@import "tailwindcss";
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ─── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --font-sans: 'Andika', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* Palette */
+  --white:   #F6F7ED;   /* Praxeti White */
+  --spring:  #DBE64C;   /* First Colors of Spring */
+  --navy:    #001F3F;   /* Midnight Mirage */
+  --mantis:  #74C365;   /* Mantis */
+  --forest:  #00804C;   /* Picture Book Green */
+  --blue:    #1E488F;   /* Nuit Blanche */
+
+  /* Surfaces */
+  --surface-page: var(--white);
+  --surface-card: #ffffff;
+
+  /* Ink — all derived from navy for tonal consistency */
+  --ink-1: #001F3F;                      /* primary */
+  --ink-2: rgba(0, 31, 63, 0.58);        /* secondary */
+  --ink-3: rgba(0, 31, 63, 0.38);        /* tertiary */
+  --ink-4: rgba(0, 31, 63, 0.10);        /* ghost / borders */
+
+  /* On-dark (inside dark color cards) */
+  --ink-on-dark-1: rgba(255,255,255,0.95);
+  --ink-on-dark-2: rgba(255,255,255,0.58);
+  --ink-on-dark-3: rgba(255,255,255,0.35);
+  --ink-on-dark-4: rgba(255,255,255,0.12);
+
+  /* Type scale */
+  --text-display: 36px;
+  --text-title:   22px;
+  --text-body:    15px;
+  --text-label:   11px;
+  --text-code:    13px;
+  --text-code-sm: 11px;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  background: var(--surface-page);
+  color: var(--ink-1);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Type ───────────────────────────────────────────────────────────────────── */
+.t-display {
+  font-family: var(--font-sans);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.t-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-title);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.t-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.5;
+}
+.t-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-label);
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.t-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.t-code-sm {
+  font-family: var(--font-mono);
+  font-size: var(--text-code-sm);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+.btn-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* On-dark overrides */
+.on-dark .t-title  { color: var(--ink-on-dark-1); }
+.on-dark .t-label  { color: var(--ink-on-dark-3); }
+.on-dark .t-code   { color: var(--ink-on-dark-2); }
+.on-dark .t-code-sm{ color: var(--ink-on-dark-3); }
+
+/* ─── Material states ────────────────────────────────────────────────────────── */
+.state-layer {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.state-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1);
+  pointer-events: none;
+}
+.state-layer:hover::after  { opacity: 0.06; }
+.state-layer:active::after { opacity: 0.14; }
+
+/* ─── Card entrance + hover ──────────────────────────────────────────────────── */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.card-enter {
+  animation: card-in 0.25s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.color-card {
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.18s cubic-bezier(0.2, 0, 0, 1);
+  cursor: default;
+}
+.color-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12) !important;
+}
+
+/* ─── Icon button hover ──────────────────────────────────────────────────────── */
+.icon-btn {
+  transition: opacity 0.15s, background-color 0.15s;
+  border-radius: 2px;
+}
+.icon-btn:hover { opacity: 1 !important; background: rgba(128,128,128,0.15); }
+
+/* ─── Copy feedback pop ──────────────────────────────────────────────────────── */
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.copy-pop { animation: pop 0.2s cubic-bezier(0.2, 0, 0, 1); }
+
+/* ─── Btn hover ──────────────────────────────────────────────────────────────── */
+.btn {
+  border-radius: 9999px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover  { opacity: 0.88; }
+.btn:active { transform: scale(0.97); }
+
+/* ─── Swatch tiles ───────────────────────────────────────────────────────────── */
+.swatch-tile {
+  width: 40px;
+  height: 40px;
+}
+.swatch-strip {
+  width: 120px;  /* 6 colors × 20px = 1/2 the tile width each */
+  height: 40px;
+}
+.swatch-divider {
+  width: 1px;
+  height: 40px;
+}
+
+/* ─── Swatch palette strip ───────────────────────────────────────────────────── */
+.palette-strip {
+  transition: box-shadow 0.18s cubic-bezier(0.2, 0, 0, 1),
+              transform 0.18s cubic-bezier(0.2, 0, 0, 1);
+  cursor: pointer;
+}
+.palette-strip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.10) !important;
+}
+.palette-strip:active { transform: scale(0.99); }
+
+/* ─── Toast ──────────────────────────────────────────────────────────────────── */
+.toast-stack {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 999;
+  pointer-events: none;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.toast {
+  font-family: var(--font-mono);
+  font-size: var(--text-code-sm);
+  color: #fff;
+  background: var(--navy);
+  padding: 8px 14px;
+  white-space: nowrap;
+  animation: toast-in 0.2s cubic-bezier(0.2, 0, 0, 1) both;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+
+/* ─── Input focus ────────────────────────────────────────────────────────────── */
+.input-wrap {
+  transition: border-color 0.15s cubic-bezier(0.2, 0, 0, 1);
+  border: 1px solid var(--ink-4);
+}
+.input-wrap:focus-within {
+  border-color: var(--ink-1);
+}
