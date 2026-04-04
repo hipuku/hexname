@@ -483,17 +483,20 @@ const PALETTE = [
 ]
 
 function Colophon() {
+  const footnote = { fontFamily: 'var(--font-sans)', fontSize: 11, lineHeight: 1.6, color: 'var(--ink-2)' }
+  const dim      = { ...footnote, color: 'var(--ink-3)' }
+
   return (
     <footer style={{ borderTop: '1px solid var(--ink-4)' }}>
-      <div className="max-w-2xl mx-auto px-6 py-12 grid gap-8" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="max-w-2xl mx-auto px-6 py-10 grid gap-8" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
 
         {/* How it works */}
         <div className="flex flex-col gap-2">
           <p className="t-label mb-1">How it works</p>
-          <p className="t-body" style={{ color: 'var(--ink-2)' }}>
-            Each color is matched against a dataset of 30,000+ named colors using Delta-E distance in the CIE Lab color space — the same model the human eye uses to judge similarity.
+          <p style={footnote}>
+            Each color is matched against 30,000+ named colors using Delta-E distance in the CIE Lab color space, the same model the human eye uses to judge similarity.
           </p>
-          <p className="t-body mt-2" style={{ color: 'var(--ink-2)' }}>
+          <p style={footnote}>
             Lab is perceptually uniform, so a distance of 5 always looks the same regardless of hue.
           </p>
         </div>
@@ -501,19 +504,19 @@ function Colophon() {
         {/* Palette */}
         <div className="flex flex-col gap-2">
           <p className="t-label mb-1">Palette</p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {PALETTE.map(({ hex, name }) => (
               <div key={hex} className="flex items-center gap-2">
                 <div
                   className="flex-shrink-0"
                   style={{
-                    width: 14,
-                    height: 14,
+                    width: 12,
+                    height: 12,
                     backgroundColor: hex,
                     border: hex === '#F6F7ED' ? '1px solid var(--ink-4)' : 'none',
                   }}
                 />
-                <span className="t-code-sm" style={{ color: 'var(--ink-2)' }}>{name}</span>
+                <span style={footnote}>{name}</span>
               </div>
             ))}
           </div>
@@ -524,20 +527,19 @@ function Colophon() {
           <p className="t-label mb-1">Built with</p>
           <div className="flex flex-col gap-1.5">
             {[
-              ['Typefaces', 'Andika · Geist Mono'],
+              ['Typefaces', 'Andika, Geist Mono'],
               ['Framework', 'React 19 + Vite'],
               ['Styles', 'Tailwind CSS v4'],
               ['Color math', 'chroma-js'],
               ['Dataset', 'meodai/color-names'],
             ].map(([label, value]) => (
-              <div key={label}>
-                <span className="t-code-sm" style={{ color: 'var(--ink-3)' }}>{label} </span>
-                <span className="t-code-sm" style={{ color: 'var(--ink-2)' }}>{value}</span>
-              </div>
+              <p key={label} style={footnote}>
+                <span style={dim}>{label} </span>{value}
+              </p>
             ))}
           </div>
-          <p className="t-code-sm mt-4" style={{ color: 'var(--ink-3)' }}>
-            hexname · {new Date().getFullYear()}
+          <p style={{ ...dim, marginTop: 12 }}>
+            hexname {new Date().getFullYear()}
           </p>
         </div>
 
