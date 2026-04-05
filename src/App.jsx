@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { nameColor, parseColor } from './colorMatcher'
+import { TetrisGame } from './Tetris'
 import './index.css'
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -92,6 +93,18 @@ function IconHalfMoon() {
   )
 }
 
+// T-tetromino used as the Tetris mode toggle icon
+function IconTetromino() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 12 12" fill="currentColor">
+      <rect x="0" y="3" width="3" height="3" rx="0.4" />
+      <rect x="3" y="3" width="3" height="3" rx="0.4" />
+      <rect x="6" y="3" width="3" height="3" rx="0.4" />
+      <rect x="3" y="6" width="3" height="3" rx="0.4" />
+    </svg>
+  )
+}
+
 // ─── Btn ──────────────────────────────────────────────────────────────────────
 
 function Btn({ children, onClick, variant = 'primary', icon }) {
@@ -131,6 +144,7 @@ function CopyIconBtn({ text, onDark = false, onToast }) {
   return (
     <button
       onClick={handle}
+      aria-label={`Copy ${text}`}
       title={`Copy ${text}`}
       className={`icon-btn flex items-center justify-center w-6 h-6 ${popping ? 'copy-pop' : ''}`}
       style={{ color: onDark ? 'var(--ink-on-dark-2)' : 'var(--ink-3)', opacity: 0.7 }}
@@ -157,8 +171,9 @@ function ColorCard({ result, onRemove, index, total, spanClass = '', onToast }) 
   const onDark = !result.isLight
 
   return (
-    <div
+    <article
       className={`card-enter color-card flex flex-col ${onDark ? 'on-dark' : ''} ${spanClass}`}
+      aria-label={`${result.name} ${result.hex.toUpperCase()}`}
       style={{
         backgroundColor: result.hex,
         animationDelay: `${index * 35}ms`,
@@ -172,8 +187,9 @@ function ColorCard({ result, onRemove, index, total, spanClass = '', onToast }) 
         </div>
         <button
           onClick={onRemove}
-          className="icon-btn flex items-center justify-center w-6 h-6 t-label"
+          aria-label={`Remove ${result.name}`}
           title="Remove"
+          className="icon-btn flex items-center justify-center w-6 h-6 t-label"
           style={{ opacity: 0.55 }}
         >
           <IconClose />
@@ -182,7 +198,7 @@ function ColorCard({ result, onRemove, index, total, spanClass = '', onToast }) 
 
       {/* Color name */}
       <div className="flex items-start justify-between px-4 pt-5 pb-1 gap-3">
-        <p className="t-title flex-1">{result.name}</p>
+        <h2 className="t-title flex-1">{result.name}</h2>
         <CopyIconBtn text={result.name} onDark={onDark} onToast={onToast} />
       </div>
 
@@ -191,11 +207,25 @@ function ColorCard({ result, onRemove, index, total, spanClass = '', onToast }) 
         <p className="t-code">{result.hex.toUpperCase()}</p>
         <CopyIconBtn text={result.hex.toUpperCase()} onDark={onDark} onToast={onToast} />
       </div>
-    </div>
+    </article>
   )
 }
 
 // ─── Export panel ─────────────────────────────────────────────────────────────
+
+function dedupeKeys(results, keyFn) {
+  const seen = {}
+  return results.map(r => {
+    let k = keyFn(r.name)
+    if (seen[k] !== undefined) {
+      seen[k]++
+      k = `${k}_${seen[k]}`
+    } else {
+      seen[k] = 0
+    }
+    return { ...r, _key: k }
+  })
+}
 
 function ExportPanel({ results, onToast }) {
   const [format, setFormat] = useState('css')
@@ -203,10 +233,13 @@ function ExportPanel({ results, onToast }) {
   const slug = n => n.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   const key  = n => n.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
 
+  const slugged = dedupeKeys(results, slug)
+  const keyed   = dedupeKeys(results, key)
+
   const outputs = {
-    css:      results.map(r => `--color-${slug(r.name)}: ${r.hex.toUpperCase()};`).join('\n'),
-    json:     JSON.stringify(Object.fromEntries(results.map(r => [key(r.name), r.hex.toUpperCase()])), null, 2),
-    tailwind: `colors: {\n${results.map(r => `  '${slug(r.name)}': '${r.hex.toUpperCase()}'`).join(',\n')}\n}`,
+    css:      slugged.map(r => `--color-${r._key}: ${r.hex.toUpperCase()};`).join('\n'),
+    json:     JSON.stringify(Object.fromEntries(keyed.map(r => [r._key, r.hex.toUpperCase()])), null, 2),
+    tailwind: `colors: {\n${slugged.map(r => `  '${r._key}': '${r.hex.toUpperCase()}'`).join(',\n')}\n}`,
     list:     results.map(r => `${r.name.padEnd(24)}${r.hex.toUpperCase()}`).join('\n'),
   }
 
@@ -322,8 +355,9 @@ function PaletteStrip({ samples, onAddAll }) {
   return (
     <button
       onClick={onAddAll}
-      className="palette-strip swatch-strip flex-shrink-0 overflow-hidden flex flex-row"
+      aria-label="Add full palette"
       title="Add full palette"
+      className="palette-strip swatch-strip flex-shrink-0 overflow-hidden flex flex-row"
       style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.10)' }}
     >
       {samples.map((hex) => (
@@ -343,15 +377,15 @@ const SAMPLES = ['#F6F7ED', '#DBE64C', '#001F3F', '#74C365', '#00804C', '#1E488F
 export default function App() {
   const [inputs, setInputs]             = useState(() => parseUrlColors())
   const [currentInput, setCurrentInput] = useState('')
-  const [results, setResults]           = useState([])
   const [showExport, setShowExport]     = useState(false)
+  const [tetrisMode, setTetrisMode]     = useState(false)
   const { toasts, addToast }            = useToast()
 
+  const results = useMemo(() => inputs.map(i => nameColor(i)).filter(Boolean), [inputs])
+
   useEffect(() => {
-    const named = inputs.map(i => nameColor(i)).filter(Boolean)
-    setResults(named)
-    setUrlColors(named.map(r => r.hex))
-  }, [inputs])
+    setUrlColors(results.map(r => r.hex))
+  }, [results])
 
   const addColor = (val) => {
     const hex = normaliseHex(val)
@@ -379,15 +413,40 @@ export default function App() {
 
   const clearAll = () => {
     setInputs([])
-    setResults([])
     setShowExport(false)
     window.history.replaceState(null, '', window.location.pathname)
     addToast('Palette cleared')
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--surface-page)' }}>
+    <div className="min-h-screen flex flex-col">
       <ToastStack toasts={toasts} />
+
+      {/* Tetris columns — rendered outside content flow, flanking the container */}
+      <TetrisGame
+        colors={results.map(r => r.hex)}
+        lightColors={results.filter(r => r.isLight).map(r => r.hex)}
+        active={tetrisMode}
+      />
+
+      {/* Tetris mode toggle — only shown once colours exist, fixed top-right */}
+      {results.length > 0 && (
+        <button
+          onClick={() => setTetrisMode(m => !m)}
+          title={tetrisMode ? 'Disable Tetris mode' : 'Tetris mode'}
+          className="tetris-toggle icon-btn flex items-center justify-center w-8 h-8"
+          style={{
+            position: 'fixed',
+            top: 14,
+            right: 16,
+            color: tetrisMode ? 'var(--blue)' : 'var(--ink-3)',
+            zIndex: 10,
+          }}
+        >
+          <IconTetromino />
+        </button>
+      )}
+
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16 flex-1 w-full">
 
         {/* Header */}
@@ -430,7 +489,7 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2">
               {results.map((result, i) => (
                 <ColorCard
-                  key={`${result.hex}-${i}`}
+                  key={result.hex}
                   result={result}
                   index={i}
                   total={results.length}
@@ -452,13 +511,14 @@ export default function App() {
                 <button
                   key={hex}
                   onClick={() => addColor(hex)}
+                  aria-label={`Add ${hex}`}
+                  title={hex}
                   className="palette-strip swatch-tile flex-shrink-0"
                   style={{
                     backgroundColor: hex,
                     border: hex === '#F6F7ED' ? '1px solid var(--ink-4)' : 'none',
                     boxShadow: '0 1px 6px rgba(0,0,0,0.10)',
                   }}
-                  title={hex}
                 />
               ))}
               {/* Divider */}

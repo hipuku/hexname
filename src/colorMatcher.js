@@ -1,11 +1,12 @@
 import chroma from 'chroma-js'
 import colornames from './colornames.json'
 
-// Build a lookup array once at module load time
+// Build a lookup array once at module load time, including precomputed Lab values.
 // Dataset is keyed as { "ff5733": "Name" }
 const COLOR_LIST = Object.entries(colornames).map(([hex, name]) => {
   const h = hex.length === 6 ? hex : hex.padStart(6, '0')
-  return { hex: `#${h}`, name }
+  const [L, a, b] = chroma(`#${h}`).lab()
+  return { hex: `#${h}`, name, L, a, b }
 })
 
 /**
@@ -33,34 +34,25 @@ export function parseColor(input) {
 
 /**
  * Find the closest named color using Delta-E in Lab color space.
- * Returns { hex, name, distance } for the best match and top 4 nearest.
+ * Returns { hex, name, distance } for the best match.
  */
-export function findClosestColor(chromaColor) {
+function findClosestColor(chromaColor) {
   const [L1, a1, b1] = chromaColor.lab()
 
   let best = null
   let bestDist = Infinity
-  const top = []
 
   for (const entry of COLOR_LIST) {
-    try {
-      const [L2, a2, b2] = chroma(entry.hex).lab()
-      const dist = Math.sqrt(
-        (L1 - L2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2
-      )
-      if (dist < bestDist) {
-        bestDist = dist
-        best = { ...entry, distance: dist }
-      }
-      top.push({ ...entry, distance: dist })
-    } catch {}
+    const dist = Math.sqrt(
+      (L1 - entry.L) ** 2 + (a1 - entry.a) ** 2 + (b1 - entry.b) ** 2
+    )
+    if (dist < bestDist) {
+      bestDist = dist
+      best = { hex: entry.hex, name: entry.name, distance: dist }
+    }
   }
 
-  // Sort and return top 5 nearest (excluding exact best)
-  top.sort((a, b) => a.distance - b.distance)
-  const nearest = top.slice(1, 5)
-
-  return { best, nearest }
+  return best
 }
 
 /**
@@ -71,7 +63,7 @@ export function nameColor(input) {
   if (!color) return null
 
   const hex = color.hex()
-  const { best, nearest } = findClosestColor(color)
+  const best = findClosestColor(color)
 
   const isLight = color.luminance() > 0.35
   // Contrast ratio against the text color that will appear on this card
@@ -81,14 +73,12 @@ export function nameColor(input) {
   return {
     hex,
     name: best?.name ?? 'Unknown',
-    distance: best?.distance ?? null,
     rgb: color.rgb().map(Math.round),
     hsl: [
       Math.round(color.hsl()[0]) || 0,
       Math.round(color.hsl()[1] * 100),
       Math.round(color.hsl()[2] * 100),
     ],
-    nearest,
     isLight,
     contrastRatio,
   }

@@ -4,6 +4,16 @@
   box-sizing: border-box;
 }
 
+html, body {
+  background-color: var(--surface-page);
+}
+
+/* ─── Tetris columns ─────────────────────────────────────────────────────────── */
+/* Hide boards and toggle when the viewport is too narrow to flank the content   */
+@media (max-width: 960px) {
+  .tetris-col, .tetris-toggle { display: none !important; }
+}
+
 /* ─── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
   --font-sans: 'Andika', system-ui, sans-serif;
