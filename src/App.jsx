@@ -309,14 +309,6 @@ function HexInput({ value, onChange, onAdd, onPasteMultiple }) {
   return (
     <div className="input-wrap" style={hasText && hasError ? { borderColor: '#cc3333' } : {}}>
       <div className="flex items-center gap-3 px-4 py-3">
-        <div
-          className="w-7 h-7 flex-shrink-0 transition-all duration-150"
-          style={{
-            backgroundColor: preview ? preview.hex() : 'transparent',
-            border: preview ? 'none' : '1.5px dashed var(--ink-4)',
-            boxShadow: preview ? '0 1px 6px rgba(0,0,0,0.12)' : 'none',
-          }}
-        />
         <input
           type="text"
           value={value}
