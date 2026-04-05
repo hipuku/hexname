@@ -143,24 +143,25 @@ function CopyIconBtn({ text, onDark = false, onToast }) {
 // ─── Mosaic grid helper ───────────────────────────────────────────────────────
 // Odd counts: first card spans full width for a natural mosaic feel
 
-function getGridStyle(index, total) {
-  if (total === 1) return { gridColumn: 'span 2' }
-  if (total % 2 === 1 && index === 0) return { gridColumn: 'span 2' }
-  return {}
+// Returns a Tailwind class so responsive breakpoints work correctly.
+// On mobile (1-col grid) everything is full width anyway.
+// On sm+ (2-col grid) solo cards and the odd leading card span both columns.
+function getSpanClass(index, total) {
+  if (total === 1 || (total % 2 === 1 && index === 0)) return 'sm:col-span-2'
+  return ''
 }
 
 // ─── Color card ───────────────────────────────────────────────────────────────
 
-function ColorCard({ result, onRemove, index, total, onToast }) {
+function ColorCard({ result, onRemove, index, total, spanClass = '', onToast }) {
   const onDark = !result.isLight
 
   return (
     <div
-      className={`card-enter color-card flex flex-col ${onDark ? 'on-dark' : ''}`}
+      className={`card-enter color-card flex flex-col ${onDark ? 'on-dark' : ''} ${spanClass}`}
       style={{
         backgroundColor: result.hex,
         animationDelay: `${index * 35}ms`,
-        ...getGridStyle(index, total),
       }}
     >
       {/* Top row */}
@@ -387,10 +388,10 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--surface-page)' }}>
       <ToastStack toasts={toasts} />
-      <div className="max-w-2xl mx-auto px-6 py-16 flex-1 w-full">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16 flex-1 w-full">
 
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-8 sm:mb-10">
           <h1 className="t-display mb-1">
             <span style={{ color: 'var(--blue)' }}>hex</span>
             <span style={{ color: 'var(--navy)' }}>name</span>
@@ -425,14 +426,15 @@ export default function App() {
               </div>
             </div>
 
-            {/* Mosaic grid — no gap */}
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+            {/* Mosaic grid — 1 col on mobile, 2 on sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2">
               {results.map((result, i) => (
                 <ColorCard
                   key={`${result.hex}-${i}`}
                   result={result}
                   index={i}
                   total={results.length}
+                  spanClass={getSpanClass(i, results.length)}
                   onRemove={() => removeColor(i)}
                   onToast={addToast}
                 />
@@ -444,7 +446,7 @@ export default function App() {
         ) : (
           <div className="mt-14">
             <p className="t-label mb-4">try these</p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Individual swatches */}
               {SAMPLES.map((hex) => (
                 <button
@@ -501,7 +503,7 @@ function Colophon() {
 
   return (
     <footer ref={ref} style={{ borderTop: '1px solid var(--ink-4)' }}>
-      <div className="max-w-2xl mx-auto px-6 py-10 grid gap-8" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 grid gap-8 grid-cols-1 sm:grid-cols-3">
 
         {/* How it works */}
         <div className="flex flex-col gap-2">
