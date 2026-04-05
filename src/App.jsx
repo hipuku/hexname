@@ -250,27 +250,29 @@ function ExportPanel({ results, onToast }) {
 // ─── Input ────────────────────────────────────────────────────────────────────
 
 function HexInput({ value, onChange, onAdd, onPasteMultiple }) {
-  const handlePaste = (e) => {
-    const pasted = e.clipboardData.getData('text')
-    const lines = pasted.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
-    if (lines.length > 1) {
-      e.preventDefault()
-      onPasteMultiple(lines)
-    }
-  }
+  // Split on commas/newlines so both typed and pasted multi-value works the same
+  const parts    = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+  const isMulti  = parts.length > 1
+  const valid    = !isMulti && isValidHex(value)
+  const allValid = isMulti && parts.every(isValidHex)
+
+  // Only flag a part as invalid once it's long enough to make a judgement (3+ chars)
+  const hasError = isMulti
+    ? parts.some(p => p.length >= 3 && !isValidHex(p))
+    : value.trim().length >= 3 && !valid
+
+  const hasText  = value.trim().length > 0
+  const preview  = valid ? parseColor(value) : null
+  const liveName = preview ? nameColor(value.trim())?.name : null
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && value.trim() && isValidHex(value)) onAdd(value.trim())
+    if (e.key !== 'Enter') return
+    if (isMulti && allValid) onPasteMultiple(parts)
+    else if (valid) onAdd(value.trim())
   }
 
-  const valid       = isValidHex(value)
-  const hasText     = value.trim().length > 0
-  const preview     = valid ? parseColor(value) : null
-  const liveName    = preview ? nameColor(value.trim())?.name : null
-  const showInvalid = hasText && !valid && value.trim().length >= 3
-
   return (
-    <div className="input-wrap" style={showInvalid ? { borderColor: '#cc3333' } : {}}>
+    <div className="input-wrap" style={hasText && hasError ? { borderColor: '#cc3333' } : {}}>
       <div className="flex items-center gap-3 px-4 py-3">
         <div
           className="w-7 h-7 flex-shrink-0 transition-all duration-150"
@@ -285,14 +287,14 @@ function HexInput({ value, onChange, onAdd, onPasteMultiple }) {
           value={value}
           onChange={e => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
           placeholder="#hex or FFF, #A1B2C3"
           className="flex-1 bg-transparent outline-none t-code"
           style={{ color: 'var(--ink-1)', caretColor: 'var(--blue)' }}
           autoFocus
           spellCheck={false}
         />
-        {valid && <Btn onClick={() => onAdd(value.trim())} variant="primary">ADD</Btn>}
+        {valid    && <Btn onClick={() => onAdd(value.trim())} variant="primary">ADD</Btn>}
+        {allValid && <Btn onClick={() => onPasteMultiple(parts)} variant="primary">ADD {parts.length}</Btn>}
       </div>
 
       {liveName && (
@@ -303,9 +305,9 @@ function HexInput({ value, onChange, onAdd, onPasteMultiple }) {
         </div>
       )}
 
-      {showInvalid && (
+      {hasText && hasError && (
         <p className="px-4 pb-2.5 t-code-sm" style={{ color: '#cc3333' }}>
-          must be 3 or 6 hex characters — e.g. FFF or A1B2C3
+          must be 3 or 6 hex characters, e.g. FFF or A1B2C3
         </p>
       )}
     </div>
@@ -353,7 +355,7 @@ export default function App() {
   const addColor = (val) => {
     const hex = normaliseHex(val)
     if (!hex) return
-    if (results.some(r => r.hex.toUpperCase() === hex)) { setCurrentInput(''); return }
+    if (results.some(r => r.hex.toUpperCase() === hex)) { addToast(`${hex} already in palette`); setCurrentInput(''); return }
     setInputs(prev => [...prev, hex])
     setCurrentInput('')
     const name = nameColor(hex)?.name
