@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, forwardRef } from 'react'
 import { nameColor, parseColor } from './colorMatcher'
 import { TetrisGame } from './Tetris'
 import './index.css'
@@ -227,7 +227,7 @@ function dedupeKeys(results, keyFn) {
   })
 }
 
-function ExportPanel({ results, onToast }) {
+const ExportPanel = forwardRef(function ExportPanel({ results, onToast }, ref) {
   const [format, setFormat] = useState('css')
 
   const slug = n => n.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
@@ -247,6 +247,7 @@ function ExportPanel({ results, onToast }) {
 
   return (
     <div
+      ref={ref}
       className="mt-4 card-enter"
       style={{ border: '1px solid var(--ink-4)', background: 'var(--surface-card)' }}
     >
@@ -279,7 +280,7 @@ function ExportPanel({ results, onToast }) {
       </pre>
     </div>
   )
-}
+})
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 
@@ -379,6 +380,7 @@ export default function App() {
   const [currentInput, setCurrentInput] = useState('')
   const [showExport, setShowExport]     = useState(false)
   const [tetrisMode, setTetrisMode]     = useState(false)
+  const exportRef                       = useRef(null)
   const { toasts, addToast }            = useToast()
 
   const results = useMemo(() => inputs.map(i => nameColor(i)).filter(Boolean), [inputs])
@@ -478,7 +480,12 @@ export default function App() {
               <span className="t-label">{results.length} {results.length === 1 ? 'color' : 'colors'}</span>
               <div className="flex gap-2">
                 <Btn onClick={() => { navigator.clipboard.writeText(window.location.href); addToast('Link copied') }} variant="ghost">SHARE</Btn>
-                <Btn onClick={() => setShowExport(e => !e)} variant="primary">
+                <Btn onClick={() => {
+                  setShowExport(e => {
+                    if (!e) setTimeout(() => exportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+                    return !e
+                  })
+                }} variant="primary">
                   {showExport ? 'HIDE EXPORT' : 'EXPORT'}
                 </Btn>
                 <Btn onClick={clearAll} variant="ghost">CLEAR</Btn>
@@ -500,7 +507,7 @@ export default function App() {
               ))}
             </div>
 
-            {showExport && <ExportPanel results={results} onToast={addToast} />}
+            {showExport && <ExportPanel ref={exportRef} results={results} onToast={addToast} />}
           </div>
         ) : (
           <div className="mt-14">
@@ -562,7 +569,7 @@ function Colophon() {
   }, [])
 
   return (
-    <footer ref={ref} style={{ borderTop: '1px solid var(--ink-4)' }}>
+    <footer ref={ref}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 grid gap-8 grid-cols-1 sm:grid-cols-3">
 
         {/* How it works */}
